@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Lukkes Outdoor – AI Widget Demo</title>
+  <style>
+    :root{ --lo-primary:#1b5e20; --lo-accent:#9ccc65; --lo-dark:#1f2937; --lo-light:#f7f9f7; --lo-white:#ffffff; }
+    body{font:16px/1.5 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;margin:0;background:var(--lo-light);color:#111827;}
+    .lo-ai-btn{position:fixed;right:20px;bottom:20px;background:var(--lo-primary);color:#fff;border:none;border-radius:999px;padding:14px 18px;font:600 14px system-ui;cursor:pointer;box-shadow:0 10px 20px rgba(0,0,0,.15);}
+    .lo-ai-panel{position:fixed;right:20px;bottom:80px;width:360px;max-width:calc(100vw - 40px);height:520px;background:#fff;border-radius:16px;overflow:hidden;display:none;border:1px solid #e5e7eb;box-shadow:0 20px 40px rgba(0,0,0,.18);}
+    .lo-ai-header{background:var(--lo-primary);color:#fff;padding:12px 14px;display:flex;justify-content:space-between;align-items:center;}
+    .lo-ai-body{height:400px;overflow:auto;background:var(--lo-light);padding:12px;}
+    .lo-ai-footer{display:grid;grid-template-columns:1fr auto;gap:8px;padding:8px;background:#fff;border-top:1px solid #eee;}
+    .lo-ai-input{padding:10px;border:1px solid #e5e7eb;border-radius:10px;}
+    .lo-ai-send{background:var(--lo-accent);color:#111827;border:none;border-radius:10px;padding:10px 14px;font-weight:700;cursor:pointer;}
+    .lo-msg{margin:8px 0;padding:10px 12px;border-radius:12px;max-width:82%;white-space:pre-wrap;}
+    .lo-msg.user{margin-left:auto;background:#e8f5e9;border:1px solid #c8e6c9;color:#1b5e20;}
+    .lo-msg.bot{margin-right:auto;background:#fff;border:1px solid #e5e7eb;color:#111827;}
+  </style>
+</head>
+<body>
+  <h1 style="padding:16px">Lukkes Outdoor – AI Widget Demo</h1>
+  <p style="padding:16px">Klik rechtsonder op de groene knop om de AI te testen.</p>
+
+  <button class="lo-ai-btn" id="loAiBtn">Vraag advies</button>
+  <div class="lo-ai-panel" id="loAiPanel">
+    <div class="lo-ai-header"><b>Lukkes Outdoor Assistent</b><button id="loAiClose">×</button></div>
+    <div class="lo-ai-body" id="loAiBody"><div class="lo-msg bot">Hoi! Waar kan ik je mee helpen?</div></div>
+    <div class="lo-ai-footer"><input id="loAiInput" class="lo-ai-input" placeholder="Typ je vraag..." /><button id="loAiSend" class="lo-ai-send">Verstuur</button></div>
+  </div>
+
+  <script>
+    const btn=document.getElementById('loAiBtn');
+    const panel=document.getElementById('loAiPanel');
+    const close=document.getElementById('loAiClose');
+    const body=document.getElementById('loAiBody');
+    const input=document.getElementById('loAiInput');
+    const send=document.getElementById('loAiSend');
+    const ENDPOINT='/api/chat';
+
+    btn.onclick=()=>{panel.style.display='block';input.focus();};
+    close.onclick=()=>{panel.style.display='none';};
+
+    function addMsg(role,text){const d=document.createElement('div');d.className='lo-msg '+role;d.textContent=text;body.appendChild(d);body.scrollTop=body.scrollHeight;}
+
+    async function ask(q){
+      addMsg('user',q);input.value='';
+      let t=document.createElement('div');t.className='lo-msg bot';t.textContent='…';body.appendChild(t);
+      try{
+        const r=await fetch(ENDPOINT,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:q})});
+        const d=await r.json();body.removeChild(t);addMsg('bot',d.answer||'Geen antwoord');
+      }catch(e){body.removeChild(t);addMsg('bot','Niet bereikbaar');}
+    }
+
+    send.onclick=()=>{if(input.value.trim())ask(input.value.trim());};
+    input.onkeydown=e=>{if(e.key==='Enter'&&input.value.trim())ask(input.value.trim());};
+  </script>
+</body>
+</html>
+
